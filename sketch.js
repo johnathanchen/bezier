@@ -11,6 +11,11 @@ var bezierLines = [];
 
 var justSwitched = false;
 
+var beziers = {};
+
+var curves = [];
+
+var speed = 50;
 function setup() {
 	createCanvas(window.innerWidth, window.innerHeight);
 	background(200);
@@ -25,7 +30,7 @@ function draw() {
 		background(200);
 		justSwitched = false;
 	}
-	counter+=0.02;
+	counter+=1;
 	if(!showLines){
 		background(200);
 	}
@@ -39,8 +44,11 @@ if (points.length > 1){
 			stroke(15);
 		}
 
+		if (counter > Math.PI * speed*2){
+			counter = 0;
+		}
 
-		recFun((Math.cos(counter)+1)/2, points);
+		recFun((Math.cos(counter/speed)+1)/2, points, true);
 
 	}	
 
@@ -56,13 +64,17 @@ if (points.length > 1){
 	// }
 	
 
-
+	beziers = {};
 }
 
 function mouseReleased(){
 		fill(255);
 
 		points.push([mouseX, mouseY]);
+
+		if (showLines){
+		background(200);}
+		curves = [];
 
 }
 
@@ -83,15 +95,19 @@ function eqMaker(t, ax, ay, bx, by){
 }
  //change
 
-function recFun(t, arr){
+
+
+function recFun(t, arr, topLv){
 
 	var size = arr.length;
 
 
+
 	if (size < 3){
-		console.log('size less than 3');
+		// console.log('size less than 3');
 		var ax = arr[0][0];
 		var ay = arr[0][1];
+
 
 		var bx = arr[1][0];
 		var by = arr[1][1];
@@ -100,37 +116,70 @@ function recFun(t, arr){
 
 	}else{
 
+		if (!(arr.toString() in beziers)){
 
 
-		console.log(arr.slice(0,2));
-		console.log(arr.slice(1,3));
+			var aCoord = recFun(t, arr.slice(0, arr.length-1), false);
+			var ax = aCoord[0];
+			var ay = aCoord[1];
 
-		var aCoord = recFun(t, arr.slice(0, arr.length-1));
-		var ax = aCoord[0];
-		var ay = aCoord[1];
+			var bCoord = recFun(t, arr.slice(1,arr.length), false);
+			var bx = bCoord[0];
+			var by = bCoord[1];
 
-		var bCoord = recFun(t, arr.slice(1,arr.length));
-		var bx = bCoord[0];
-		var by = bCoord[1];
+			var newCoo = eqMaker(t, ax, ay, bx, by);
+			var x = newCoo[0];
+			var y = newCoo[1];
 
-		var newCoo = eqMaker(t, ax, ay, bx, by);
-		var x = newCoo[0];
-		var y = newCoo[1];
+			var newKey = arr.toString();
+			beziers[newKey] = [x,y];
 
-		// console.log(ax, ay, bx, by);
+			if (topLv && (curves[counter] === undefined))
+				curves[counter] = [x,y];
+
+		}else{
+
+			var targCoord = beziers[arr.toString()];
+			var x = targCoord[0];
+			var y = targCoord[1];
+
+		}
+		
+			stroke(0);
+
+		for (var i = 0; i < curves.length-1; i++){
+
+			var curr = curves[i];
+			var next = curves[i+5];
+
+			if ((curr !== undefined) && (next !== undefined)){
+				line(curr[0], curr[1], next[0], next[1]);
+			}
+
+			// if ()
+
+			// ellipse(30,30,100,200);
+			// console.log(counter);
+		}
+
+		stroke(0,0,0,10);
+
+		// createCurve(arr);
 
 
 		if(!showLines){
-			stroke(0);
-			line(ax, ay, bx, by);	
-			ellipse(ax, ay, ellipseSize);
-			ellipse(bx, by, ellipseSize);
-			ellipse(x, y, ellipseSize);
-		}else{
-			stroke(0,0,0,5);
-			line(ax, ay, bx, by);
+					stroke(0);
+					line(ax, ay, bx, by);	
+					ellipse(ax, ay, ellipseSize);
+					ellipse(bx, by, ellipseSize);
+					ellipse(x, y, ellipseSize);
+				}else{
+					stroke(0,0,0,5);
+					line(ax, ay, bx, by);
 
-}
+		}
+
+		
 		stroke(0);
 
 
