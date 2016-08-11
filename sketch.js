@@ -1,7 +1,10 @@
 // "use strict";
 var points = [];
 var ellipseSize = 15;
+
 var counter = 0;
+var cosCounter = 0;
+var endOfLine = false;
 
 var showLines = false;
 
@@ -26,6 +29,8 @@ function setup() {
 
 function draw() {
 
+	cosCounter = Math.cos(counter/speed)
+
 	if (justSwitched){
 		background(200);
 		justSwitched = false;
@@ -46,9 +51,10 @@ if (points.length > 1){
 
 		if (counter > Math.PI * speed*2){
 			counter = 0;
+			endOfLine = true;
 		}
 
-		recFun((Math.cos(counter/speed)+1)/2, points, true);
+		recFun((Math.cos(counter/speed)+1)/2, points, 0);
 
 	}	
 
@@ -75,6 +81,7 @@ function mouseReleased(){
 		if (showLines){
 		background(200);}
 		curves = [];
+		counter = 0;
 
 }
 
@@ -93,11 +100,10 @@ function eqMaker(t, ax, ay, bx, by){
 
 	return [x,y];
 }
- //change
 
 
 
-function recFun(t, arr, topLv){
+function recFun(t, arr, lv){
 
 	var size = arr.length;
 
@@ -119,11 +125,11 @@ function recFun(t, arr, topLv){
 		if (!(arr.toString() in beziers)){
 
 
-			var aCoord = recFun(t, arr.slice(0, arr.length-1), false);
+			var aCoord = recFun(t, arr.slice(0, arr.length-1), lv+1);
 			var ax = aCoord[0];
 			var ay = aCoord[1];
 
-			var bCoord = recFun(t, arr.slice(1,arr.length), false);
+			var bCoord = recFun(t, arr.slice(1,arr.length), lv+1);
 			var bx = bCoord[0];
 			var by = bCoord[1];
 
@@ -134,8 +140,10 @@ function recFun(t, arr, topLv){
 			var newKey = arr.toString();
 			beziers[newKey] = [x,y];
 
-			if (topLv && (curves[counter] === undefined))
+			if (lv === 0 && (curves[counter] === undefined) && endOfLine !== true){
 				curves[counter] = [x,y];
+			}
+
 
 		}else{
 
