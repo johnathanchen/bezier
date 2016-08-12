@@ -6,19 +6,17 @@ var counter = 0;
 var cosCounter = 0;
 var endOfLine = false;
 
-var showLines = false;
+var globalLv = 0;
 
-var outsideLines = [];
-var connectingLines = [];
-var bezierLines = [];
+var showLines = false;
 
 var justSwitched = false;
 
 var beziers = {};
 
-var curves = [];
+curves = [];
 
-var speed = 50;
+var speed = 50	;
 function setup() {
 	createCanvas(window.innerWidth, window.innerHeight);
 	background(200);
@@ -29,7 +27,8 @@ function setup() {
 
 function draw() {
 
-	cosCounter = Math.cos(counter/speed)
+	recLevel = 0;
+	cosCounter = Math.cos(counter/speed) //todo add a threshold !!!!
 
 	if (justSwitched){
 		background(200);
@@ -40,21 +39,21 @@ function draw() {
 		background(200);
 	}
 
-if (points.length > 1){
-		for (var i = 0; i < points.length-1; i++){
-			stroke(255);
-			if (!showLines){
-				stroke(0);
-				line(points[i][0],points[i][1],points[i+1][0],points[i+1][1]);}
-			stroke(15);
-		}
+	if (points.length > 1){
+			for (var i = 0; i < points.length-1; i++){
+				stroke(255);
+				if (!showLines){
+					stroke(0);
+					line(points[i][0],points[i][1],points[i+1][0],points[i+1][1]);}
+				stroke(15);
+			}
 
-		if (counter > Math.PI * speed*2){
-			counter = 0;
-			endOfLine = true;
-		}
+			if (counter > Math.PI * speed*2){
+				counter = 0;
+				endOfLine = true;
+			}
 
-		recFun((Math.cos(counter/speed)+1)/2, points, 0);
+			recFun((Math.cos(counter/speed)+1)/2, points,0);
 
 	}	
 
@@ -63,25 +62,33 @@ if (points.length > 1){
 			ellipse(points[i][0],points[i][1],15);
 		}}
 
-	// for (var i = 0; i < connectingLines.length-1;i++){
-	// 	stroke(0,0,0,50);
-	// 	line(connectingLines[i][0],connectingLines[i][1],connectingLines[i][2],connectingLines[i][3])
-	// 	stroke(0,0,0,100);
-	// }
-	
 
 	beziers = {};
-}
+}	
 
 function mouseReleased(){
+
+		curves = [];
+		// endOfLine = false;
+		background(200);
+		// counter = 0;
+		justReleased = false;
+
+
 		fill(255);
 
 		points.push([mouseX, mouseY]);
 
 		if (showLines){
 		background(200);}
-		curves = [];
-		counter = 0;
+		// curves = [];
+		var n = points.length + 3; //todo 
+		for (var i = 0; i < 300; i++){
+			curves.push([]);	
+		}
+		// counter = 0;
+		endOfline = false;
+		// curves = []
 
 }
 
@@ -89,6 +96,17 @@ function keyReleased(){
 	if (keyCode == 32){
 		showLines = !showLines;
 		justSwitched = true;
+	}
+
+	if (keyCode == 8){
+		background(200);
+	}
+
+	if (keyCode == 27){
+		points = [];
+		curves = [];
+		endOfLine = false;
+		background(200);
 	}
 }
 
@@ -102,8 +120,8 @@ function eqMaker(t, ax, ay, bx, by){
 }
 
 
-
 function recFun(t, arr, lv){
+
 
 	var size = arr.length;
 
@@ -124,12 +142,11 @@ function recFun(t, arr, lv){
 
 		if (!(arr.toString() in beziers)){
 
-
-			var aCoord = recFun(t, arr.slice(0, arr.length-1), lv+1);
+			var aCoord = recFun(t, arr.slice(0, arr.length-1), lv*2 + 1);
 			var ax = aCoord[0];
 			var ay = aCoord[1];
 
-			var bCoord = recFun(t, arr.slice(1,arr.length), lv+1);
+			var bCoord = recFun(t, arr.slice(1,arr.length), lv*2 + 2);
 			var bx = bCoord[0];
 			var by = bCoord[1];
 
@@ -140,8 +157,10 @@ function recFun(t, arr, lv){
 			var newKey = arr.toString();
 			beziers[newKey] = [x,y];
 
-			if (lv === 0 && (curves[counter] === undefined) && endOfLine !== true){
-				curves[counter] = [x,y];
+			// console.log(curves);
+
+			if ((curves[lv][counter] === undefined) && endOfLine !== true){
+				curves[lv].push([x,y]);
 			}
 
 
@@ -151,29 +170,13 @@ function recFun(t, arr, lv){
 			var x = targCoord[0];
 			var y = targCoord[1];
 
+
 		}
-		
-			stroke(0);
+		if (!showLines)
+			drawCurves();
 
-		for (var i = 0; i < curves.length-1; i++){
-
-			var curr = curves[i];
-			var next = curves[i+5];
-
-			if ((curr !== undefined) && (next !== undefined)){
-				line(curr[0], curr[1], next[0], next[1]);
-			}
-
-			// if ()
-
-			// ellipse(30,30,100,200);
-			// console.log(counter);
-		}
 
 		stroke(0,0,0,10);
-
-		// createCurve(arr);
-
 
 		if(!showLines){
 					stroke(0);
@@ -182,16 +185,36 @@ function recFun(t, arr, lv){
 					ellipse(bx, by, ellipseSize);
 					ellipse(x, y, ellipseSize);
 				}else{
-					stroke(0,0,0,5);
+					stroke(0,0,0,3);
 					line(ax, ay, bx, by);
-
 		}
-
-		
 		stroke(0);
-
-
 		return [x,y];
 
 	}
 }
+
+function drawCurves(){
+
+		stroke(0);
+		noFill();
+		// beginShape();
+		for (var i = 0; i < curves.length; i++){
+			beginShape();
+			stroke(255,0,0);
+			for (var j = 0; j < curves[i].length; j++){
+				var curr = curves[i][j];
+				// console.log(curr);
+				if (curr !== undefined){
+					curveVertex(curr[0],curr[1]);
+				}
+
+			}
+			endShape();
+		} 
+		// endShape();
+
+		fill(256);
+}
+
+
